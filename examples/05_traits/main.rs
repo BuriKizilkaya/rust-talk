@@ -1,101 +1,137 @@
 // ============================================
 // 05 — Traits & Generics
 // ============================================
-// Analogie C++:
-//   class Shape { virtual double area() = 0; }  → trait Area
-//   template<typename T>                         → fn foo<T: Trait>
 //
-// Rust:
-//   impl Trait  → statischer Dispatch (Zero-Cost, wie C++ Templates)
-//   dyn Trait   → dynamischer Dispatch (vtable, wie C++ virtual)
+// Traits = Rusts Interfaces — aber ohne Vererbungshierarchie.
+//
+// C++:  class Shape { virtual double area() = 0; }
+//       class Circle : public Shape { ... }   ← Circle IST-EIN Shape
+//
+// Rust: trait Area { fn area(&self) -> f64; }
+//       impl Area for Circle { ... }          ← Circle KANN Area berechnen
+//
+// Kein "extends", kein "implements" — Komposition statt Vererbung.
+// Traits können nachträglich für jeden Typ implementiert werden.
 
-use std::fmt;
-
-// --- Trait Definition (wie pure virtual class in C++) ---
+// --------------------------------------------------
+// Trait Definition
+// --------------------------------------------------
 trait Area {
     fn area(&self) -> f64;
-    fn describe(&self) -> String {
-        // Default-Implementierung möglich
-        format!("Form mit Fläche {:.2}", self.area())
+
+    // Default-Implementierung — kann überschrieben werden
+    fn beschreibung(&self) -> String {
+        format!("Fläche: {:.2}", self.area())
     }
 }
 
-struct Circle {
+// --------------------------------------------------
+// Typen — keine Basisklasse nötig
+// --------------------------------------------------
+struct Kreis {
     radius: f64,
 }
-struct Rectangle {
-    width: f64,
-    height: f64,
+struct Rechteck {
+    breite: f64,
+    hoehe: f64,
+}
+struct Dreieck {
+    basis: f64,
+    hoehe: f64,
 }
 
-impl Area for Circle {
+impl Area for Kreis {
     fn area(&self) -> f64 {
         std::f64::consts::PI * self.radius * self.radius
     }
 }
 
-impl Area for Rectangle {
+impl Area for Rechteck {
     fn area(&self) -> f64 {
-        self.width * self.height
+        self.breite * self.hoehe
     }
 }
 
-// --- Statischer Dispatch (wie C++ Templates — Zero-Cost) ---
-fn print_area_static(shape: &impl Area) {
-    println!("[static]  {}", shape.describe());
+impl Area for Dreieck {
+    fn area(&self) -> f64 {
+        0.5 * self.basis * self.hoehe
+    }
+    // beschreibung() überschreiben
+    fn beschreibung(&self) -> String {
+        format!("Dreieck mit Fläche {:.2}", self.area())
+    }
 }
 
-// --- Dynamischer Dispatch (wie C++ virtual — vtable) ---
-fn print_area_dynamic(shape: &dyn Area) {
-    println!("[dynamic] {}", shape.describe());
+// --------------------------------------------------
+// impl Trait — statischer Dispatch (Zero-Cost)
+// Compiler erzeugt für jeden Typ eine eigene Funktion (Monomorphisierung)
+// --------------------------------------------------
+fn zeige_flaeche(form: &impl Area) {
+    println!("[static]  {}", form.beschreibung());
 }
 
-// --- Generics mit Bounds (explizit, klare Fehlermeldungen) ---
-fn largest<T: PartialOrd>(list: &[T]) -> &T {
-    let mut largest = &list[0];
-    for item in list {
-        if item > largest {
-            largest = item;
+// --------------------------------------------------
+// dyn Trait — dynamischer Dispatch (vtable, wie C++ virtual)
+// Typ erst zur Laufzeit bekannt
+// --------------------------------------------------
+fn zeige_flaeche_dyn(form: &dyn Area) {
+    println!("[dynamic] {}", form.beschreibung());
+}
+
+// --------------------------------------------------
+// Generics mit Trait-Bounds
+// C++: template<typename T>  (keine Constraints sichtbar)
+// Rust: <T: PartialOrd>      (Constraint direkt im Typ)
+// --------------------------------------------------
+fn groesster<T: PartialOrd>(liste: &[T]) -> &T {
+    let mut max = &liste[0];
+    for item in liste {
+        if item > max {
+            max = item;
         }
     }
-    largest
-}
-
-// --- Mehrere Trait Bounds (wie C++20 Concepts) ---
-fn print_and_compare<T: fmt::Display + PartialOrd>(a: T, b: T) {
-    if a > b {
-        println!("{} ist größer als {}", a, b);
-    } else {
-        println!("{} ist kleiner/gleich {}", a, b);
-    }
+    max
 }
 
 fn main() {
-    let c = Circle { radius: 3.0 };
-    let r = Rectangle {
-        width: 4.0,
-        height: 5.0,
+    let k = Kreis { radius: 3.0 };
+    let r = Rechteck {
+        breite: 4.0,
+        hoehe: 5.0,
+    };
+    let d = Dreieck {
+        basis: 6.0,
+        hoehe: 4.0,
     };
 
-    print_area_static(&c);
-    print_area_static(&r);
+    // Statischer Dispatch
+    zeige_flaeche(&k);
+    zeige_flaeche(&r);
+    zeige_flaeche(&d);
 
-    // Heterogene Collection mit dyn Trait (wie vector<unique_ptr<Shape>>)
-    let shapes: Vec<Box<dyn Area>> = vec![
-        Box::new(Circle { radius: 1.0 }),
-        Box::new(Rectangle {
-            width: 2.0,
-            height: 3.0,
+    println!();
+
+    // Heterogene Liste — nur mit dyn Trait möglich
+    // Entspricht: vector<unique_ptr<Shape>> in C++
+    let formen: Vec<Box<dyn Area>> = vec![
+        Box::new(Kreis { radius: 1.0 }),
+        Box::new(Rechteck {
+            breite: 2.0,
+            hoehe: 3.0,
         }),
-        Box::new(Circle { radius: 5.0 }),
+        Box::new(Dreieck {
+            basis: 4.0,
+            hoehe: 2.0,
+        }),
     ];
-    for shape in &shapes {
-        print_area_dynamic(shape.as_ref());
+
+    for form in &formen {
+        zeige_flaeche_dyn(form.as_ref());
     }
 
-    // Generics
-    let numbers = vec![34, 50, 25, 100, 65];
-    println!("Größte Zahl: {}", largest(&numbers));
+    println!();
 
-    print_and_compare(3.14, 2.71);
+    // Generics
+    let zahlen = vec![34, 50, 25, 100, 65];
+    println!("Größte Zahl: {}", groesster(&zahlen));
 }

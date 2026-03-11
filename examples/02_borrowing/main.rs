@@ -1,50 +1,63 @@
 // ============================================
-// 02 — Borrowing & References
+// 02 — Borrowing & Referenzen
 // ============================================
-// Analogie C++:
-//   void use(const std::string& s)  → &s (immutable borrow)
-//   void modify(std::string& s)     → &mut s (mutable borrow)
 //
-// Rust-Regel:
-//   Entweder N * &T  ODER  1 * &mut T — nie beides gleichzeitig
+// Borrowing = Ausleihen ohne Ownership zu übertragen.
+// Der Owner bleibt Eigentümer — die Referenz ist nur temporär.
+//
+// Regeln (Compile-Zeit geprüft, kein Runtime-Overhead):
+//   &T     → immutable borrow  — beliebig viele gleichzeitig
+//   &mut T → mutable borrow    — genau eine, exklusiv
 
 fn main() {
-    // --- Beispiel 1: Immutable Borrow ---
+    // --------------------------------------------------
+    // 1. Immutable Borrow — Owner bleibt Eigentümer
+    // --------------------------------------------------
     let s = String::from("hello");
-    let len = calculate_length(&s); // leihen, nicht verschieben
-    println!("'{}' hat Länge {}", s, len); // s ist noch gültig ✅
 
-    // --- Beispiel 2: Mutable Borrow ---
-    let mut s2 = String::from("hello");
-    change(&mut s2);
-    println!("Geändert: {}", s2); // ✅
+    let laenge = berechne_laenge(&s); // & = borrow, kein Move
+    println!("'{}' hat {} Zeichen", s, laenge); // ✅ s gehört noch main
 
-    // --- Beispiel 3: Borrow-Regeln ---
-    let mut s3 = String::from("hello");
+    // --------------------------------------------------
+    // 2. Mehrere Leser gleichzeitig — kein Problem
+    // --------------------------------------------------
+    let r1 = &s;
+    let r2 = &s;
+    let r3 = &s;
+    println!("{} {} {}", r1, r2, r3); // ✅ alle lesen gleichzeitig
 
-    let r1 = &s3; // ✅ immutable
-    let r2 = &s3; // ✅ zweiter immutable
-    println!("{} und {}", r1, r2);
-    // Nach diesem println! werden r1, r2 nicht mehr genutzt → Borrows enden
+    // --------------------------------------------------
+    // 3. Mutable Borrow — exklusiver Schreibzugriff
+    // --------------------------------------------------
+    let mut text = String::from("hello");
 
-    let r3 = &mut s3; // ✅ jetzt mutable borrow OK
-    r3.push_str(", world");
-    println!("{}", r3);
+    aendern(&mut text);
+    println!("Geändert: {}", text); // ✅
 
-    // --- Beispiel 4: Kein Dangling Pointer möglich ---
-    // let reference = dangle(); // ❌ würde nicht kompilieren
+    // --------------------------------------------------
+    // 4. Nicht gleichzeitig lesen & schreiben
+    // --------------------------------------------------
+    let mut data = String::from("hello");
+
+    let leser = &data; // ✅ immutable borrow
+                       // aendern(&mut data);      // ❌ COMPILE ERROR: cannot borrow as mutable
+                       //    because it is also borrowed as immutable
+    println!("{}", leser); // leser wird hier nicht mehr genutzt
+
+    aendern(&mut data); // ✅ jetzt OK — leser ist nicht mehr aktiv
+    println!("{}", data);
 }
 
-fn calculate_length(s: &String) -> usize {
+fn berechne_laenge(s: &String) -> usize {
     s.len() // s wird nicht gedroppt — nur geliehen
 }
 
-fn change(s: &mut String) {
+fn aendern(s: &mut String) {
     s.push_str(", world");
 }
 
-// Diese Funktion kompiliert NICHT — zeigen und erklären:
+// Diese Funktion kompiliert NICHT — Dangling Reference:
 // fn dangle() -> &String {
 //     let s = String::from("hello");
-//     &s  // ❌ s wird hier gedroppt, Referenz wäre dangling
-// }
+//     &s   // ❌ s wird am Ende des Scopes gedroppt
+// }        //    die Referenz würde auf ungültigen Speicher zeigen

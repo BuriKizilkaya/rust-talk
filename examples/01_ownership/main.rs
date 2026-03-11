@@ -1,44 +1,48 @@
 // ============================================
-// 01 — Ownership & Move Semantics
+// 01 — Ownership
 // ============================================
-// Analogie C++:
-//   int* ptr = new int(42);
-//   delete ptr;  // du bist verantwortlich
 //
-// Rust: Compiler übernimmt das automatisch
+// Kernregel: Jeder Wert hat genau EINEN Owner.
+// Endet der Scope des Owners → Wert wird automatisch gedroppt.
+//
+// C++:  int* p = new int(42);  delete p;  // du bist verantwortlich
+// Rust: Der Compiler übernimmt das.
 
 fn main() {
-    // --- Beispiel 1: Basic Ownership ---
-    let s1 = String::from("hello");
-    let s2 = s1; // Move! s1 ist nicht mehr gültig
+    // --------------------------------------------------
+    // 1. Scope & automatisches Drop
+    // --------------------------------------------------
+    {
+        let s = String::from("hello"); // s wird allokiert
+        println!("s = {}", s);
+    } // ← s wird hier automatisch gedroppt (kein delete nötig)
 
-    // println!("{}", s1); // ❌ COMPILE ERROR: value borrowed here after move
-    println!("s2 = {}", s2); // ✅
+    // --------------------------------------------------
+    // 2. Ownership in Funktionen übergeben (Move)
+    // --------------------------------------------------
+    let name = String::from("Alice");
+    begruesse(name); // Ownership geht an Funktion
+                     // println!("{}", name);       // ❌ COMPILE ERROR: name wurde moved
 
-    // --- Beispiel 2: Clone (explizite Kopie wie memcpy) ---
-    let s3 = String::from("world");
-    let s4 = s3.clone(); // explizite deep copy
-    println!("s3 = {}, s4 = {}", s3, s4); // ✅ beide gültig
+    // --------------------------------------------------
+    // 3. Ownership zurückbekommen
+    // --------------------------------------------------
+    let name2 = String::from("Bob");
+    let name2 = gib_zurueck(name2); // Ownership kommt zurück
+    println!("Zurück: {}", name2); // ✅
 
-    // --- Beispiel 3: Copy-Types (primitives, wie in C) ---
-    let x = 5;
-    let y = x; // Copy, kein Move (integers sind Copy)
+    // --------------------------------------------------
+    // 4. Copy-Typen — primitives werden kopiert, nicht gemoved
+    // --------------------------------------------------
+    let x: i32 = 42;
+    let y = x; // Kopie, kein Move
     println!("x = {}, y = {}", x, y); // ✅ beide gültig
-
-    // --- Beispiel 4: Ownership in Funktionen ---
-    let s5 = String::from("ownership");
-    takes_ownership(s5); // s5 wird gemoved
-                         // println!("{}", s5); // ❌ COMPILE ERROR
-
-    let x = makes_copy(42); // i32 wird kopiert
-    println!("x zurück: {}", x); // ✅
 }
 
-fn takes_ownership(s: String) {
-    println!("Ich besitze jetzt: {}", s);
-} // s wird hier gedroppt → free()
+fn begruesse(s: String) {
+    println!("Hallo, {}!", s);
+} // s wird hier gedroppt
 
-fn makes_copy(x: i32) -> i32 {
-    println!("Kopie von: {}", x);
-    x
+fn gib_zurueck(s: String) -> String {
+    s // Ownership an den Aufrufer zurückgeben
 }

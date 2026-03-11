@@ -1,0 +1,3 @@
+[tools]
+marp-cli = "latest"
+rust = "latest"

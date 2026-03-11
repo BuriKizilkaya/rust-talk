@@ -142,6 +142,55 @@ for (int i = 0; i < 5; i++)
 
 ---
 
+## Syntax — Basics
+
+<div class="cols">
+<div>
+
+**C++**
+```cpp
+// Variablen
+int x = 5;
+const int y = 10;
+
+// Funktion
+int add(int a, int b) {
+    return a + b;
+}
+
+// Struct
+struct Point {
+    float x;
+    float y;
+};
+```
+
+</div>
+<div>
+
+**Rust**
+```rust
+// Variablen
+let x = 5;
+let y: i32 = 10; // unveränderlich by default
+
+// Funktion
+fn add(a: i32, b: i32) -> i32 {
+    a + b  // kein return nötig
+}
+
+// Struct
+struct Point {
+    x: f32,
+    y: f32,
+}
+```
+
+</div>
+</div>
+
+---
+
 ## Cargo & Tooling
 
 **C/C++:** `cmake`, `make`, `vcpkg`, `conan`, `gdb`, `valgrind` …

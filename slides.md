@@ -73,6 +73,18 @@ style: |
   table tr:nth-child(even) {
     background: #f5fafa;
   }
+  section.paginate > *:last-child,
+  section[data-marpit-pagination]::after {
+    all: unset;
+  }
+  section[data-marpit-pagination-total]::after {
+    content: attr(data-marpit-pagination) ' / ' attr(data-marpit-pagination-total);
+    position: fixed;
+    bottom: 16px;
+    right: 24px;
+    font-size: 0.75rem;
+    color: #999;
+  }
   .cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -241,76 +253,61 @@ lto       = true
 
 📂 `examples/01_ownership/main.rs`
 
-In C/C++: **Du** bist verantwortlich für Speicher.
+<div class="cols">
+<div>
 
+**C++** — du bist verantwortlich:
 ```cpp
 int* ptr = new int(42);
 use(ptr);
-delete ptr;       // Vergiss das → Memory Leak
-use(ptr);         // Use-after-free → 💥
+delete ptr;   // vergisst man → Leak
+use(ptr);     // Use-after-free → 💥
+
+// Doppelt freigeben → 💥
+delete ptr;
 ```
 
-In Rust: **Der Compiler** überwacht den Besitz.
+</div>
+<div>
 
+**Rust** — der Compiler überwacht:
 ```rust
-let s = String::from("hello"); // s besitzt den Speicher
-use_string(s);                 // Ownership wird übergeben (move)
-println!("{}", s);             // ❌ COMPILE ERROR: s wurde moved
-                               // kein delete nötig — automatisch gedroppt
+let s = String::from("hello");
+use_string(s);      // Ownership geht über
+println!("{}", s);  // ❌ COMPILE ERROR
+
+// Scope endet → automatisch gedroppt
+// kein delete, kein free, kein GC
+{
+    let x = String::from("hi");
+}   // ← x wird hier freigegeben
 ```
 
-> **Regel:** Jeder Wert hat genau **einen** Owner. Endet der Scope → `free()`.
+</div>
+</div>
+
+**Die drei Ownership-Regeln:**
+1. Jeder Wert hat genau **einen** Owner
+2. Es kann nur **einen** Owner gleichzeitig geben
+3. Endet der Scope des Owners → Wert wird **gedroppt**
 
 ---
 
-## Move Semantics — C++ vs Rust
+## Ownership — Warum ist das wichtig?
 
-📂 `examples/01_ownership/main.rs`
+Die häufigsten C/C++ Bugs — in Rust zur Compile-Zeit unmöglich:
 
-```cpp
-// C++ Move: opt-in, Compiler prüft nichts
-std::vector<int> a = {1, 2, 3};
-std::vector<int> b = std::move(a);
-a.push_back(4);  // UB: "valid but unspecified state" 💥
-```
+| Bug              | C/C++                           | Rust                               |
+| ---------------- | ------------------------------- | ---------------------------------- |
+| Memory Leak      | `delete` vergessen              | ❌ unmöglich — automatisch gedroppt |
+| Use-after-free   | Pointer nach `delete` nutzen    | ❌ Compiler Error                   |
+| Double-free      | `delete` zweimal aufrufen       | ❌ Compiler Error                   |
+| Dangling Pointer | Pointer auf ungültigen Speicher | ❌ Compiler Error                   |
+| Buffer Overflow  | Array-Grenzen überschreiten     | ❌ Panic zur Laufzeit               |
 
-```rust
-// Rust Move: default, Compiler verhindert Missbrauch
-let a = vec![1, 2, 3];
-let b = a;        // a wird bewegt — Ownership geht an b
-a.push(4);        // ❌ COMPILE ERROR: value used after move
-```
+> ⚠️ Buffer Overflow ist eine Ausnahme — Arraygrenzen sind oft erst zur Laufzeit bekannt. Rust löst das mit einer **Panic** statt stilles UB wie in C++.
 
-|                    | C++                         | Rust                |
-| ------------------ | --------------------------- | ------------------- |
-| Move explizit?     | `std::move(x)` nötig        | Implizit — Default  |
-| Nach Move nutzbar? | ✅ UB möglich                | ❌ Compile Error     |
-| Kopie              | Copy-Konstruktor (implizit) | `.clone()` explizit |
-
----
-
-## Move Semantics — Copy-Typen
-
-Nicht alle Typen werden gemoved — primitive Typen implementieren `Copy`:
-
-```rust
-// Copy-Typen: automatisch kopiert, kein Move
-let x: i32 = 5;
-let y = x;
-println!("{} {}", x, y);        // ✅ x ist noch gültig
-```
-
-```rust
-// Heap-Typen: Move by default — explizite Kopie mit clone()
-let a = vec![1, 2, 3];
-let b = a.clone();               // deep copy
-println!("{:?} {:?}", a, b);    // ✅ beide gültig
-```
-
-| `Copy`                              | nicht `Copy`                         |
-| ----------------------------------- | ------------------------------------ |
-| `i32`, `f64`, `bool`, `char`        | `String`, `Vec<T>`, `Box<T>`         |
-| Stack-allokiert, billig zu kopieren | Heap-allokiert, explizites `clone()` |
+> Microsoft: **70% aller CVEs** in Windows sind Memory-Safety-Bugs. In Rust wären sie zur Compile-Zeit abgefangen worden.
 
 ---
 
@@ -318,61 +315,141 @@ println!("{:?} {:?}", a, b);    // ✅ beide gültig
 
 📂 `examples/02_borrowing/main.rs`
 
+Ownership übergeben ist oft zu viel — stattdessen **ausleihen**:
+
 ```rust
+fn laenge(s: &String) -> usize {  // s wird geborgt, nicht übernommen
+    s.len()
+}
+
 fn main() {
-    let mut s = String::from("hello");
-
-    let r1 = &s;      // ✅ immutable borrow
-    let r2 = &s;      // ✅ N immutable borrows erlaubt
-    println!("{} {}", r1, r2);
-    // r1, r2 nicht mehr genutzt → Borrows enden hier
-
-    let r3 = &mut s;  // ✅ genau 1 mutable borrow
-    r3.push_str(", world");
-    println!("{}", r3);
+    let s = String::from("hello");
+    let n = laenge(&s);    // & = borrow
+    println!("{} hat {} Zeichen", s, n);  // ✅ s gehört noch main
 }
 ```
 
-> **Borrowing-Regeln** (zur Compile-Zeit geprüft — kein Runtime-Overhead):
-> - Entweder **beliebig viele** `&T` (immutable)
-> - Oder **genau eine** `&mut T` (mutable)
-> — nie beides gleichzeitig → **keine Data Races möglich**
+> Owner bleibt immer Eigentümer — Borrows sind nur **temporäre Leihe**.
 
 ---
 
-## Lifetimes
+## Borrowing — Die Regeln
+
+```rust
+let mut s = String::from("hello");
+
+// Mehrere Leser gleichzeitig ✅ — Owner bleibt Eigentümer
+let r1 = &s;
+let r2 = &s;
+let r3 = &s;
+println!("{} {} {}", r1, r2, r3);  // ✅ alle lesen gleichzeitig
+
+// Aber: sobald jemand schreibt → exklusiv
+let w = &mut s;       // ✅ genau 1 mutable borrow
+w.push_str(", world");
+// let r4 = &s;       // ❌ COMPILE ERROR: nicht gleichzeitig lesen & schreiben
+```
+
+> Mehrere Leser sind erlaubt, aber nie gleichzeitig mit einem Schreiber → **keine Data Races.** (Compile-Zeit geprüft — kein Runtime-Overhead)
+
+---
+
+## Borrowing — vs C++ Referenzen
+
+<div class="cols">
+<div>
+
+**C++** — Referenzen, keine Garantien:
+```cpp
+std::string& get_name() {
+    std::string name = "Alice";
+    return name;  // 💥 Dangling Reference!
+}                 // name wird hier zerstört
+
+int* dangle() {
+    int x = 5;
+    return &x;    // 💥 Pointer auf Stack-Variable
+}
+```
+
+</div>
+<div>
+
+**Rust** — Compiler verhindert Dangling:
+```rust
+fn get_name() -> &String {
+    let name = String::from("Alice");
+    &name  // ❌ COMPILE ERROR:
+}          // `name` lebt nicht lang genug
+
+// Lösung: Ownership zurückgeben
+fn get_name() -> String {
+    String::from("Alice")  // ✅
+}
+```
+
+</div>
+</div>
+
+> Rust garantiert: **Referenzen zeigen immer auf gültigen Speicher.**
+
+---
+
+## Lifetimes — Was ist das?
 
 📂 `examples/03_lifetimes/main.rs`
 
+Jede Referenz in Rust hat eine **Lifetime** — wie lange sie gültig ist. Meistens inferiert der Compiler sie automatisch:
+
 ```rust
-// Welche Referenz wird zurückgegeben? Der Compiler muss es wissen.
+fn main() {
+    let s1 = String::from("hello");  // s1 lebt ab hier
+    let r;
+    {
+        let s2 = String::from("world");  // s2 lebt nur im Block
+        r = &s2;
+    }                                    // s2 wird hier gedroppt
+    println!("{}", r);  // ❌ COMPILE ERROR: r zeigt auf ungültigen Speicher
+}
+```
+
+> Der Compiler erkennt: `r` würde auf einen bereits zerstörten Wert zeigen — **Dangling Reference zur Compile-Zeit verhindert**, nicht erst beim Absturz.
+
+---
+
+## Lifetimes — Explizite Annotationen
+
+Nötig wenn der Compiler nicht selbst herleiten kann, welche Referenz zurückkommt:
+
+```rust
+// Ohne 'a: Compiler weiß nicht, wie lange der Rückgabewert gültig ist
 fn longer<'a>(x: &'a str, y: &'a str) -> &'a str {
     if x.len() > y.len() { x } else { y }
-//  'a: Rückgabewert lebt so lange wie das KÜRZERE der beiden
+//  'a bedeutet: Rückgabewert lebt so lange wie das KÜRZERE der beiden
 }
 ```
 
 ```rust
 fn main() {
     let s1 = String::from("long string");
-    let result;
     {
         let s2 = String::from("xyz");
-        result = longer(s1.as_str(), s2.as_str());
-        println!("{}", result); // ✅
+        let result = longer(s1.as_str(), s2.as_str());
+        println!("{}", result);  // ✅
     }
-    // println!("{}", result); // ❌ s2 lebt nicht mehr → Compile Error
+    // result hier nutzen → ❌ COMPILE ERROR: s2 lebt nicht mehr
 }
 ```
 
-> `'a` ist **kein Runtime-Konzept** — reine Compiler-Annotation.
-> Meist inferiert der Compiler Lifetimes automatisch.
+> `'a` ist **kein Runtime-Konzept** — verschwindet nach der Kompilierung vollständig. Kein Overhead.
 
 ---
 
 ## Error Handling — Result\<T, E\>
 
 📂 `examples/04_error_handling/main.rs`
+
+In C++ gibt es kein eingebautes `Result` — Fehler werden per Exceptions, Rückgabecodes oder `errno` behandelt, alle ignorierbar. Rust macht Fehler **Teil des Typsystems** — unbehandelte Fehler sind ein Compile Error.
 
 ```rust
 use std::fs::File;
@@ -399,37 +476,91 @@ fn read_username() -> Result<String, std::io::Error> {
 
 ---
 
-## Traits & Generics
+## Traits — Interfaces in Rust
 
 📂 `examples/05_traits/main.rs`
 
+Traits sind Rusts Antwort auf C++ virtuelle Klassen — aber ohne Vererbung:
+
+<div class="cols">
+<div>
+
+**C++** — Vererbungshierarchie:
+```cpp
+class Shape {
+public:
+    virtual double area() = 0;
+};
+// Circle IST-EIN Shape
+class Circle : public Shape {
+    double r;
+public:
+    Circle(double r) : r(r) {}
+    double area() override {
+        return M_PI * r * r;
+    }
+};
+```
+
+</div>
+<div>
+
+**Rust** — Komposition statt Vererbung:
 ```rust
-trait Area { fn area(&self) -> f64; }
+trait Area {
+    fn area(&self) -> f64;
+}
+// Circle ist kein "Shape" —
+// Circle kann Area berechnen
+struct Circle { radius: f64 }
 
-struct Circle    { radius: f64 }
-struct Rectangle { width: f64, height: f64 }
-
-impl Area for Circle    { fn area(&self) -> f64 { std::f64::consts::PI * self.radius * self.radius } }
-impl Area for Rectangle { fn area(&self) -> f64 { self.width * self.height } }
-
-// impl Trait → statischer Dispatch (Zero-Cost)
-fn print_static(shape: &impl Area)  { println!("static:  {:.2}", shape.area()); }
-
-// dyn Trait → dynamischer Dispatch (vtable)
-fn print_dynamic(shape: &dyn Area)  { println!("dynamic: {:.2}", shape.area()); }
-
-fn main() {
-    let shapes: Vec<Box<dyn Area>> = vec![
-        Box::new(Circle { radius: 3.0 }),
-        Box::new(Rectangle { width: 4.0, height: 5.0 }),
-    ];
-    for s in &shapes { print_dynamic(s.as_ref()); }
+impl Area for Circle {
+    fn area(&self) -> f64 {
+        std::f64::consts::PI
+            * self.radius * self.radius
+    }
 }
 ```
 
+</div>
+</div>
+
+In C++ ist `Circle` ein `Shape` — die Hierarchie ist fest verdrahtet. In Rust gibt es keine Basisklasse: `Circle` ist einfach ein Typ, der den `Area`-Trait **implementiert**. Ein Typ kann beliebig viele Traits implementieren, unabhängig voneinander.
+
+> Traits können auch **nachträglich** für fremde Typen implementiert werden — z.B. `impl Display for MyStruct`.
+
 ---
 
-## Wo wird Rust eingesetzt?
+## Generics — Statischer vs. Dynamischer Dispatch
+
+```rust
+struct Rectangle { width: f64, height: f64 }
+impl Area for Rectangle {
+    fn area(&self) -> f64 { self.width * self.height }
+}
+
+// impl Trait → Compile-Zeit, monomorphisiert (Zero-Cost)
+fn print_static(shape: &impl Area) { println!("{:.2}", shape.area()); }
+
+// dyn Trait → Laufzeit, vtable (wie C++ virtual)
+fn print_dynamic(shape: &dyn Area) { println!("{:.2}", shape.area()); }
+
+// Heterogene Liste — nur mit dyn möglich
+let shapes: Vec<Box<dyn Area>> = vec![
+    Box::new(Circle { radius: 3.0 }),
+    Box::new(Rectangle { width: 4.0, height: 5.0 }),
+];
+```
+
+|                  | `impl Trait`            | `dyn Trait`                  |
+| ---------------- | ----------------------- | ---------------------------- |
+| Dispatch         | statisch (Compile-Zeit) | dynamisch (Laufzeit, vtable) |
+| Performance      | Zero-Cost               | kleiner Overhead             |
+| Heterogene Liste | ❌                       | ✅ `Vec<Box<dyn Trait>>`      |
+
+---
+
+## Wo wird / kann Rust eingesetzt?
 
 <style>
 .rust-grid2 {
@@ -478,8 +609,6 @@ fn main() {
     <ul>
       <li>Figma</li>
       <li>Google Earth</li>
-      <li>Leptos</li>
-      <li>Dioxus</li>
     </ul>
   </div>
   <div class="rust-box2">
@@ -497,7 +626,6 @@ fn main() {
     <h4>Desktop</h4>
     <ul>
       <li>Zed Editor</li>
-      <li>Tauri</li>
       <li>Gitbutler</li>
       <li>Spacedrive</li>
     </ul>

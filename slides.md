@@ -20,7 +20,7 @@ style: |
     left: 20px;
     width: 120px;
     height: 40px;
-    background-image: url('konplan_logo_quer_gruen_2024.png');
+    background-image: url('assets/konplan_logo_quer_gruen_2024.png');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;

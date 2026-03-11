@@ -1,28 +1,75 @@
 ---
 marp: true
 theme: default
-class: invert
+class: default
 paginate: true
 style: |
   section {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
     font-size: 1.0rem;
+    background: #ffffff;
+    color: #333333;
   }
-  h1 { color: #f74c00; }
-  h2 { color: #f74c00; }
-  h3 { color: #f7a000; }
+  section::before {
+    content: '';
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: 120px;
+    height: 40px;
+    background-image: url('konplan_logo_quer_gruen_2024.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 100;
+  }
+  section::after {
+    content: '';
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background-image: url('https://upload.wikimedia.org/wikipedia/commons/d/d5/Rust_programming_language_black_logo.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    z-index: 100;
+  }
+  h1 { color: #004D52; }
+  h2 { color: #004D52; }
+  h3 { color: #004D52; }
   code { font-size: 0.88rem; }
-  blockquote { border-left: 4px solid #f74c00; color: #aaa; }
+  blockquote { border-left: 4px solid #004D52; color: #666; }
   .tag {
     display: inline-block;
-    background: #f74c00;
+    background: #004D52;
     color: white;
     padding: 2px 10px;
     border-radius: 20px;
     font-size: 0.75rem;
     margin-bottom: 8px;
   }
-  table { font-size: 0.85rem; }
+  table {
+    font-size: 0.85rem;
+    background: #ffffff;
+    color: #333333;
+    border-collapse: collapse;
+  }
+  table th {
+    background: #B5DDDA;
+    color: #004D52;
+    padding: 8px 12px;
+    border: 1px solid #004D52;
+  }
+  table td {
+    padding: 8px 12px;
+    border: 1px solid #B5DDDA;
+    color: #333333;
+  }
+  table tr:nth-child(even) {
+    background: #f5fafa;
+  }
 ---
 
 # 🦀 Rust für C/C++ Entwickler

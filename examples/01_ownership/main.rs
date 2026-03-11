@@ -28,7 +28,7 @@ fn main() {
     // --- Beispiel 4: Ownership in Funktionen ---
     let s5 = String::from("ownership");
     takes_ownership(s5); // s5 wird gemoved
-    // println!("{}", s5); // ❌ COMPILE ERROR
+                         // println!("{}", s5); // ❌ COMPILE ERROR
 
     let x = makes_copy(42); // i32 wird kopiert
     println!("x zurück: {}", x); // ✅

@@ -14,13 +14,19 @@ use std::fmt;
 // --- Trait Definition (wie pure virtual class in C++) ---
 trait Area {
     fn area(&self) -> f64;
-    fn describe(&self) -> String {  // Default-Implementierung möglich
+    fn describe(&self) -> String {
+        // Default-Implementierung möglich
         format!("Form mit Fläche {:.2}", self.area())
     }
 }
 
-struct Circle { radius: f64 }
-struct Rectangle { width: f64, height: f64 }
+struct Circle {
+    radius: f64,
+}
+struct Rectangle {
+    width: f64,
+    height: f64,
+}
 
 impl Area for Circle {
     fn area(&self) -> f64 {
@@ -48,7 +54,9 @@ fn print_area_dynamic(shape: &dyn Area) {
 fn largest<T: PartialOrd>(list: &[T]) -> &T {
     let mut largest = &list[0];
     for item in list {
-        if item > largest { largest = item; }
+        if item > largest {
+            largest = item;
+        }
     }
     largest
 }
@@ -64,7 +72,10 @@ fn print_and_compare<T: fmt::Display + PartialOrd>(a: T, b: T) {
 
 fn main() {
     let c = Circle { radius: 3.0 };
-    let r = Rectangle { width: 4.0, height: 5.0 };
+    let r = Rectangle {
+        width: 4.0,
+        height: 5.0,
+    };
 
     print_area_static(&c);
     print_area_static(&r);
@@ -72,7 +83,10 @@ fn main() {
     // Heterogene Collection mit dyn Trait (wie vector<unique_ptr<Shape>>)
     let shapes: Vec<Box<dyn Area>> = vec![
         Box::new(Circle { radius: 1.0 }),
-        Box::new(Rectangle { width: 2.0, height: 3.0 }),
+        Box::new(Rectangle {
+            width: 2.0,
+            height: 3.0,
+        }),
         Box::new(Circle { radius: 5.0 }),
     ];
     for shape in &shapes {

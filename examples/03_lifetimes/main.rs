@@ -31,10 +31,14 @@ fn main() {
 
 // 'a sagt: Rückgabewert lebt so lange wie das KÜRZERE der beiden Parameter
 fn longer<'a>(x: &'a str, y: &'a str) -> &'a str {
-    if x.len() > y.len() { x } else { y }
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
 }
 
 // Struct der eine Referenz hält — Lifetime nötig
 struct FirstSentence<'a> {
-    part: &'a str,  // 'a: dieser struct darf nicht länger leben als der referenzierte String
+    part: &'a str, // 'a: dieser struct darf nicht länger leben als der referenzierte String
 }

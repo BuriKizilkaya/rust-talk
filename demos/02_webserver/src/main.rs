@@ -18,7 +18,7 @@
 //     -d '{"name":"Alice","age":30}'
 
 use axum::{
-    extract::Path,
+    extract::{Path, State},
     http::StatusCode,
     response::Json,
     routing::{get, post},
@@ -30,15 +30,15 @@ use tokio::net::TcpListener;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct User {
-    id:   u32,
+    id: u32,
     name: String,
-    age:  u32,
+    age: u32,
 }
 
 #[derive(Deserialize)]
 struct CreateUser {
     name: String,
-    age:  u32,
+    age: u32,
 }
 
 // Thread-sicherer shared State — Arc<Mutex<T>>
@@ -47,12 +47,20 @@ type SharedState = Arc<Mutex<Vec<User>>>;
 #[tokio::main]
 async fn main() {
     let state: SharedState = Arc::new(Mutex::new(vec![
-        User { id: 1, name: "Alice".into(), age: 30 },
-        User { id: 2, name: "Bob".into(),   age: 25 },
+        User {
+            id: 1,
+            name: "Alice".into(),
+            age: 30,
+        },
+        User {
+            id: 2,
+            name: "Bob".into(),
+            age: 25,
+        },
     ]));
 
     let app = Router::new()
-        .route("/users",     get(get_users).post(create_user))
+        .route("/users", get(get_users).post(create_user))
         .route("/users/:id", get(get_user_by_id))
         .with_state(state);
 
@@ -61,17 +69,17 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn get_users(
-    axum::extract::State(state): axum::extract::State<SharedState>,
-) -> Json<Vec<User>> {
+async fn get_users(State(state): State<SharedState>) -> Json<Vec<User>> {
     Json(state.lock().unwrap().clone())
 }
 
 async fn get_user_by_id(
-    axum::extract::State(state): axum::extract::State<SharedState>,
+    State(state): State<SharedState>,
     Path(id): Path<u32>,
 ) -> Result<Json<User>, StatusCode> {
-    state.lock().unwrap()
+    state
+        .lock()
+        .unwrap()
         .iter()
         .find(|u| u.id == id)
         .cloned()
@@ -80,14 +88,14 @@ async fn get_user_by_id(
 }
 
 async fn create_user(
-    axum::extract::State(state): axum::extract::State<SharedState>,
+    State(state): State<SharedState>,
     Json(payload): Json<CreateUser>,
 ) -> (StatusCode, Json<User>) {
     let mut users = state.lock().unwrap();
     let user = User {
-        id:   users.len() as u32 + 1,
+        id: users.len() as u32 + 1,
         name: payload.name,
-        age:  payload.age,
+        age: payload.age,
     };
     users.push(user.clone());
     (StatusCode::CREATED, Json(user))

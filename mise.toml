@@ -2,7 +2,16 @@
 marp-cli = "latest"
 rust = "1.94.0"
 
-
 [tasks.slides]
 description = "Generate slides from markdown to html and pdf"
 run = "marp --html --pdf slides.md"
+
+[tasks.rust]
+description = "Run a Rust example: mise run rust <ordner>"
+usage = 'arg "<ordner>" help="Beispiel-Ordner, z.B. 01_ownership"'
+run = "cargo run --manifest-path examples/${usage_ordner}/Cargo.toml"
+
+[tasks.cpp]
+description = "Compile and run a C++ example: mise run cpp <ordner>"
+usage = 'arg "<ordner>" help="Beispiel-Ordner, z.B. 01_ownership"'
+run = "g++ -std=c++17 -o /tmp/cpp_example examples/${usage_ordner}/main.cpp && /tmp/cpp_example"

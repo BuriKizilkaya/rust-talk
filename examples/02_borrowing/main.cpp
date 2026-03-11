@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 // --- Beispiel 1: const Referenz (immutable borrow) ---
 size_t calculate_length(const std::string& s) {

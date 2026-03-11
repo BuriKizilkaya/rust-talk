@@ -210,7 +210,30 @@ cargo doc --open         # Dokumentation generieren
 
 > `Cargo.toml` = `CMakeLists.txt` + Paketmanager + Test-Runner in einem
 
+---
 
+## Cargo.toml
+
+```toml
+[package]
+name    = "my_project"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde      = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio      = { version = "1", features = ["full"] }
+
+[dev-dependencies]
+pretty_assertions = "1"
+
+[profile.release]
+opt-level = 3
+lto       = true
+```
+
+> Dependencies, Build-Profile und Metadaten — alles in einer Datei.
 
 ---
 
@@ -240,30 +263,54 @@ println!("{}", s);             // ❌ COMPILE ERROR: s wurde moved
 
 ---
 
-## Move Semantics
+## Move Semantics — C++ vs Rust
 
 📂 `examples/01_ownership/main.rs`
 
 ```cpp
-// C++: Move ist opt-in — vergisst man leicht
+// C++ Move: opt-in, Compiler prüft nichts
 std::vector<int> a = {1, 2, 3};
 std::vector<int> b = std::move(a);
 a.push_back(4);  // UB: "valid but unspecified state" 💥
 ```
 
 ```rust
-// Rust: Move ist der Default — Compiler verhindert Missbrauch
+// Rust Move: default, Compiler verhindert Missbrauch
 let a = vec![1, 2, 3];
-let b = a;        // impliziter Move — a ist weg
-a.push(4);        // ❌ COMPILE ERROR — kein UB, kein Crash
+let b = a;        // a wird bewegt — Ownership geht an b
+a.push(4);        // ❌ COMPILE ERROR: value used after move
+```
+
+|                    | C++                         | Rust                |
+| ------------------ | --------------------------- | ------------------- |
+| Move explizit?     | `std::move(x)` nötig        | Implizit — Default  |
+| Nach Move nutzbar? | ✅ UB möglich                | ❌ Compile Error     |
+| Kopie              | Copy-Konstruktor (implizit) | `.clone()` explizit |
+
+---
+
+## Move Semantics — Copy-Typen
+
+Nicht alle Typen werden gemoved — primitive Typen implementieren `Copy`:
+
+```rust
+// Copy-Typen: automatisch kopiert, kein Move
+let x: i32 = 5;
+let y = x;
+println!("{} {}", x, y);        // ✅ x ist noch gültig
 ```
 
 ```rust
-// Explizite Kopie: clone()
+// Heap-Typen: Move by default — explizite Kopie mit clone()
 let a = vec![1, 2, 3];
-let b = a.clone(); // deep copy
-println!("{:?} {:?}", a, b); // ✅ beide gültig
+let b = a.clone();               // deep copy
+println!("{:?} {:?}", a, b);    // ✅ beide gültig
 ```
+
+| `Copy`                              | nicht `Copy`                         |
+| ----------------------------------- | ------------------------------------ |
+| `i32`, `f64`, `bool`, `char`        | `String`, `Vec<T>`, `Box<T>`         |
+| Stack-allokiert, billig zu kopieren | Heap-allokiert, explizites `clone()` |
 
 ---
 
@@ -382,42 +429,31 @@ fn main() {
 
 ---
 
-## 🗺️ Wo wird Rust eingesetzt?
+## Wo wird Rust eingesetzt?
 
 <style>
-.rust-grid {
+.rust-grid2 {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  margin-top: 40px;
-  margin-bottom: 30px;
+  gap: 10px;
+  margin-top: 16px;
 }
-.rust-box {
-  background: #f5fafa;
-  border: 2px solid #B5DDDA;
-  border-radius: 8px;
-  padding: 12px;
+.rust-box2 {
+  background: #004D52;
+  border-radius: 10px;
+  padding: 14px 10px;
   text-align: center;
+  color: white;
 }
-.rust-box h4 {
-  color: #004D52;
-  margin: 0 0 8px 0;
-  font-size: 0.9rem;
-}
-.rust-box ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 0.7rem;
-  color: #333;
-}
-.rust-box li {
-  margin: 4px 0;
-}
+.rust-box2 .icon { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+.rust-box2 h4 { color: #B5DDDA; margin: 0 0 8px 0; font-size: 0.95rem; }
+.rust-box2 ul { margin: 0; padding: 0; list-style: none; font-size: 0.72rem; }
+.rust-box2 li { margin: 3px 0; opacity: 0.85; }
 </style>
 
-<div class="rust-grid">
-  <div class="rust-box">
+<div class="rust-grid2">
+  <div class="rust-box2">
+    <span class="icon">⚡</span>
     <h4>CLI</h4>
     <ul>
       <li>ripgrep</li>
@@ -426,37 +462,41 @@ fn main() {
       <li>exa</li>
     </ul>
   </div>
-  <div class="rust-box">
-    <h4>Web</h4>
+  <div class="rust-box2">
+    <span class="icon">🌐</span>
+    <h4>Web / Cloud</h4>
     <ul>
       <li>axum</li>
       <li>Discord</li>
-      <li>Cloudflare Workers</li>
+      <li>Cloudflare</li>
       <li>npm Registry</li>
     </ul>
   </div>
-  <div class="rust-box">
-    <h4>WASM</h4>
+  <div class="rust-box2">
+    <span class="icon">🔧</span>
+    <h4>WebAssembly</h4>
     <ul>
       <li>Figma</li>
       <li>Google Earth</li>
-      <li>Web UI (Leptos)</li>
+      <li>Leptos</li>
       <li>Dioxus</li>
     </ul>
   </div>
-  <div class="rust-box">
+  <div class="rust-box2">
+    <span class="icon">🔌</span>
     <h4>Embedded</h4>
     <ul>
       <li>Linux Kernel</li>
       <li>Android</li>
       <li>Infineon</li>
-      <li>STM32/ESP</li>
+      <li>STM32 / ESP</li>
     </ul>
   </div>
-  <div class="rust-box">
+  <div class="rust-box2">
+    <span class="icon">🖥️</span>
     <h4>Desktop</h4>
     <ul>
-      <li>Zed</li>
+      <li>Zed Editor</li>
       <li>Tauri</li>
       <li>Gitbutler</li>
       <li>Spacedrive</li>
@@ -465,13 +505,14 @@ fn main() {
 </div>
 
 
+<br>
+<br>
+
 > Rust läuft überall — vom Mikrocontroller bis zum Cloud-Datacenter.
 
 ---
 
 ## DEMO 1 — CLI Tool
-
-**📂 `demos/01_cli/cli.rs`** 
 
 ```rust
 use std::{env, fs, process};
@@ -501,13 +542,11 @@ fn search<'a>(query: &str, contents: &'a str) -> Vec<(usize, &'a str)> {
 }
 ```
 
-> Echte Projekte: **ripgrep**, bat, fd, exa, delta, zoxide
+> Echte Projekte: ripgrep, bat, fd, exa, delta, zoxide, just, mise
 
 ---
 
 ## DEMO 2 — Web Server (axum)
-
-**📂 `demos/02_webserver/src/main.rs`** 
 
 ```rust
 #[derive(Serialize, Deserialize, Clone)]
@@ -543,8 +582,6 @@ curl -X POST http://localhost:3000/users -d '{"name":"Alice","age":30}'
 
 ## DEMO 3 — Systems / Performance
 
-**📂 `demos/03_systems/systems.rs`**
-
 ```rust
 // Zero-Copy Record: Slices zeigen in die Originaldaten
 #[derive(Debug)]
@@ -574,8 +611,6 @@ let result = unsafe { abs(-42) };
 ---
 
 ## DEMO 4 — WebAssembly
-
-**📂 `demos/04_wasm/wasm.rs`**
 
 ```bash
 rustup target add wasm32-unknown-unknown
@@ -615,8 +650,6 @@ console.log(c.get(), fibonacci(10)); // → 5, 55
 
 ## DEMO 5 — Embedded / no_std
 
-**📂 `demos/05_embedded/embedded.rs`**
-
 ```bash
 rustup target add thumbv7em-none-eabihf
 cargo build --target thumbv7em-none-eabihf
@@ -652,8 +685,6 @@ async fn main(spawner: Spawner) {
 
 ## DEMO 6 — Web UI (Leptos)
 
-**📂 `demos/06_webui/webui.rs`** · `cargo install trunk && trunk serve`
-
 ```rust
 use leptos::*;
 
@@ -683,8 +714,6 @@ fn main() { mount_to_body(|| view! { <Counter /> }) }
 ---
 
 ## DEMO 7 — Desktop App (Tauri)
-
-**📂 `demos/07_desktop/desktop.rs`** · `cargo tauri dev`
 
 ```rust
 #[derive(Serialize, Deserialize, Clone)]

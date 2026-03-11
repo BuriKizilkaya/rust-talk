@@ -1,8 +1,0 @@
-[package]
-name    = "cargo-demo"
-version = "0.1.0"
-edition = "2021"
-
-[[bin]]
-name = "cargo-demo"
-path = "main.rs"

@@ -9,6 +9,9 @@ style: |
     font-size: 1.0rem;
     background: #ffffff;
     color: #333333;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding-top: 80px;
   }
   section::before {
     content: '';
@@ -70,6 +73,11 @@ style: |
   table tr:nth-child(even) {
     background: #f5fafa;
   }
+  .cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
 ---
 
 # 🦀 Rust für C/C++ Entwickler
@@ -80,18 +88,57 @@ style: |
 
 ---
 
+## Die Geschichte von Rust
+
+**2006 — Der Aufzug:** Graydon Hoare kommt nach Hause. Der Aufzug ist wegen eines Software-Absturzes ausgefallen. Er wohnt im **21. Stock.** Auf dem Treppensteigen denkt er: *„Wir können keinen Aufzug bauen, der nicht abstürzt?"* — Er öffnet seinen Laptop und beginnt Rust zu schreiben.
+
+| Jahr          | Meilenstein                                                       |
+| ------------- | ----------------------------------------------------------------- |
+| **2009**      | Mozilla sponsert Rust offiziell                                   |
+| **2013**      | Garbage Collector entfernt — Rust läuft ohne GC                   |
+| **2015**      | **Rust 1.0** — erste stabile Version                              |
+| **2016–2022** | 7× in Folge beliebteste Sprache (Stack Overflow Survey)           |
+| **2021**      | Rust Foundation gegründet (Mozilla, Google, Microsoft, Amazon, …) |
+| **2022**      | Linux-Kernel nimmt Rust als zweite Systemsprache auf              |
+
+---
+
 ## Warum Rust?
 
-| | C/C++ | Rust |
-|---|---|---|
-| Performance | ✅ | ✅ |
-| Memory Safety | ❌ manuell | ✅ compile-time |
-| Data Races | ❌ | ✅ unmöglich |
-| Garbage Collector | ❌ | ❌ |
-| Zero-Cost Abstraktion | ✅ | ✅ |
-| Tooling | 😬 | ✅ cargo |
+|                       | C/C++     | Rust           |
+| --------------------- | --------- | -------------- |
+| Performance           | ✅         | ✅              |
+| Memory Safety         | ❌ manuell | ✅ compile-time |
+| Data Races            | ❌         | ✅ unmöglich    |
+| Garbage Collector     | ❌         | ❌              |
+| Zero-Cost Abstraktion | ✅         | ✅              |
+| Tooling               | 😬         | ✅ cargo        |
 
-> Kein Runtime-Overhead. Kein GC. Keine Segfaults.
+> Kein Runtime-Overhead. Kein GC.
+
+---
+
+## Zero-Cost Abstraktion
+
+> „What you don't use, you don't pay for. What you do use, you couldn't write better by hand." — Bjarne Stroustrup
+
+Hochlesbarer Code — **identisches Assembly** wie die handgeschriebene Schleife:
+
+```rust
+let sum: i32 = vec![1, 2, 3, 4, 5]
+    .iter()
+    .filter(|&&x| x % 2 == 0)
+    .map(|&x| x * x)
+    .sum();
+```
+
+```c
+// Äquivalentes C — der Compiler erzeugt denselben Maschinencode
+int sum = 0;
+for (int i = 0; i < 5; i++)
+    if (arr[i] % 2 == 0)
+        sum += arr[i] * arr[i];
+```
 
 ---
 
@@ -114,11 +161,13 @@ cargo doc --open         # Dokumentation generieren
 
 > `Cargo.toml` = `CMakeLists.txt` + Paketmanager + Test-Runner in einem
 
-📂 `examples/06_cargo/main.rs`
+
 
 ---
 
 ## Ownership — Das Kernkonzept
+
+📂 `examples/01_ownership/main.rs`
 
 In C/C++: **Du** bist verantwortlich für Speicher.
 
@@ -140,11 +189,11 @@ println!("{}", s);             // ❌ COMPILE ERROR: s wurde moved
 
 > **Regel:** Jeder Wert hat genau **einen** Owner. Endet der Scope → `free()`.
 
-📂 `examples/01_ownership/main.rs`
-
 ---
 
 ## Move Semantics
+
+📂 `examples/01_ownership/main.rs`
 
 ```cpp
 // C++: Move ist opt-in — vergisst man leicht
@@ -167,11 +216,11 @@ let b = a.clone(); // deep copy
 println!("{:?} {:?}", a, b); // ✅ beide gültig
 ```
 
-📂 `examples/01_ownership/main.rs`
-
 ---
 
 ## Borrowing — Referenzen ohne Gefahr
+
+📂 `examples/02_borrowing/main.rs`
 
 ```rust
 fn main() {
@@ -193,11 +242,11 @@ fn main() {
 > - Oder **genau eine** `&mut T` (mutable)
 > — nie beides gleichzeitig → **keine Data Races möglich**
 
-📂 `examples/02_borrowing/main.rs`
-
 ---
 
 ## Lifetimes
+
+📂 `examples/03_lifetimes/main.rs`
 
 ```rust
 // Welche Referenz wird zurückgegeben? Der Compiler muss es wissen.
@@ -223,11 +272,11 @@ fn main() {
 > `'a` ist **kein Runtime-Konzept** — reine Compiler-Annotation.
 > Meist inferiert der Compiler Lifetimes automatisch.
 
-📂 `examples/03_lifetimes/main.rs`
-
 ---
 
 ## Error Handling — Result\<T, E\>
+
+📂 `examples/04_error_handling/main.rs`
 
 ```rust
 use std::fs::File;
@@ -252,11 +301,11 @@ fn read_username() -> Result<String, std::io::Error> {
 
 > `Option<T>` analog — für nullable Werte statt Fehler (`Some` / `None`).
 
-📂 `examples/04_error_handling/main.rs`
-
 ---
 
 ## Traits & Generics
+
+📂 `examples/05_traits/main.rs`
 
 ```rust
 trait Area { fn area(&self) -> f64; }
@@ -282,27 +331,90 @@ fn main() {
 }
 ```
 
-📂 `examples/05_traits/main.rs`
-
 ---
 
 ## 🗺️ Wo wird Rust eingesetzt?
 
-```
-                        🦀 Rust
-                           │
-      ┌──────────┬──────────┼──────────┬──────────┐
-      │          │          │          │          │
-    CLI        Web       WASM      Embedded    Desktop
-  ripgrep    axum      Figma     Linux-Kernel   Zed
-    bat      Discord  Google      Android      Tauri
-     fd     Cloudflare  Earth     Infineon   Gitbutler
-             Workers             STM32/ESP
-                          │
-                        Web UI
-                        Leptos
-                        Dioxus
-```
+<style>
+.rust-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-top: 40px;
+  margin-bottom: 30px;
+}
+.rust-box {
+  background: #f5fafa;
+  border: 2px solid #B5DDDA;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+}
+.rust-box h4 {
+  color: #004D52;
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+}
+.rust-box ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.7rem;
+  color: #333;
+}
+.rust-box li {
+  margin: 4px 0;
+}
+</style>
+
+<div class="rust-grid">
+  <div class="rust-box">
+    <h4>CLI</h4>
+    <ul>
+      <li>ripgrep</li>
+      <li>bat</li>
+      <li>fd</li>
+      <li>exa</li>
+    </ul>
+  </div>
+  <div class="rust-box">
+    <h4>Web</h4>
+    <ul>
+      <li>axum</li>
+      <li>Discord</li>
+      <li>Cloudflare Workers</li>
+      <li>npm Registry</li>
+    </ul>
+  </div>
+  <div class="rust-box">
+    <h4>WASM</h4>
+    <ul>
+      <li>Figma</li>
+      <li>Google Earth</li>
+      <li>Web UI (Leptos)</li>
+      <li>Dioxus</li>
+    </ul>
+  </div>
+  <div class="rust-box">
+    <h4>Embedded</h4>
+    <ul>
+      <li>Linux Kernel</li>
+      <li>Android</li>
+      <li>Infineon</li>
+      <li>STM32/ESP</li>
+    </ul>
+  </div>
+  <div class="rust-box">
+    <h4>Desktop</h4>
+    <ul>
+      <li>Zed</li>
+      <li>Tauri</li>
+      <li>Gitbutler</li>
+      <li>Spacedrive</li>
+    </ul>
+  </div>
+</div>
+
 
 > Rust läuft überall — vom Mikrocontroller bis zum Cloud-Datacenter.
 
@@ -310,7 +422,7 @@ fn main() {
 
 ## DEMO 1 — CLI Tool
 
-**📂 `demos/01_cli/cli.rs`** · `rustc cli.rs && ./cli "fn" cli.rs`
+**📂 `demos/01_cli/cli.rs`** 
 
 ```rust
 use std::{env, fs, process};
@@ -346,7 +458,7 @@ fn search<'a>(query: &str, contents: &'a str) -> Vec<(usize, &'a str)> {
 
 ## DEMO 2 — Web Server (axum)
 
-**📂 `demos/02_webserver/src/main.rs`** · `cargo run`
+**📂 `demos/02_webserver/src/main.rs`** 
 
 ```rust
 #[derive(Serialize, Deserialize, Clone)]
@@ -382,7 +494,7 @@ curl -X POST http://localhost:3000/users -d '{"name":"Alice","age":30}'
 
 ## DEMO 3 — Systems / Performance
 
-**📂 `demos/03_systems/systems.rs`** · `rustc -O systems.rs && ./systems`
+**📂 `demos/03_systems/systems.rs`**
 
 ```rust
 // Zero-Copy Record: Slices zeigen in die Originaldaten
@@ -546,10 +658,10 @@ const notes = await invoke('get_notes');
 const note  = await invoke('add_note', { title: 'Hey', content: '🦀' });
 ```
 
-| | Electron | Tauri |
-|---|---|---|
-| Bundle-Grösse | ~150 MB | ~8 MB |
-| RAM-Verbrauch | ~200 MB | ~30 MB |
+|               | Electron | Tauri  |
+| ------------- | -------- | ------ |
+| Bundle-Grösse | ~150 MB  | ~8 MB  |
+| RAM-Verbrauch | ~200 MB  | ~30 MB |
 
 > Echte Projekte: **Zed**, Gitbutler, Spacedrive
 
@@ -557,13 +669,13 @@ const note  = await invoke('add_note', { title: 'Hey', content: '🦀' });
 
 ## Zusammenfassung
 
-| Konzept | Rust-Lösung |
-|---|---|
-| Memory Safety | Ownership + Borrow Checker (compile-time) |
-| Fehlerbehandlung | `Result<T,E>` + `?` Operator |
-| Abstraktion | Traits — statisch & dynamisch (Zero-Cost) |
-| Tooling | `cargo` — alles in einem |
-| Einsatzgebiete | CLI · Web · WASM · Embedded · Desktop · UI |
+| Konzept          | Rust-Lösung                                |
+| ---------------- | ------------------------------------------ |
+| Memory Safety    | Ownership + Borrow Checker (compile-time)  |
+| Fehlerbehandlung | `Result<T,E>` + `?` Operator               |
+| Abstraktion      | Traits — statisch & dynamisch (Zero-Cost)  |
+| Tooling          | `cargo` — alles in einem                   |
+| Einsatzgebiete   | CLI · Web · WASM · Embedded · Desktop · UI |
 
 ---
 
@@ -587,4 +699,3 @@ rust-analyzer
 
 ### Fragen? 🙋
 
----

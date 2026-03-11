@@ -6,6 +6,4 @@ members = [
     "examples/03_lifetimes",
     "examples/04_error_handling",
     "examples/05_traits",
-    "examples/06_cargo",
-    "demos/02_webserver",
 ]

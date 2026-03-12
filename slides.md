@@ -10,8 +10,10 @@ style: |
     font-size: 1.0rem;
     background: #ffffff;
     color: #333333;
+    display: flex;
+    flex-direction: column;
     justify-content: flex-start;
-    align-items: flex-start;
+    align-items: stretch;
     padding-top: 80px;
     padding-bottom: 60px;
   }
@@ -35,7 +37,7 @@ style: |
   h1 { color: #004D52; }
   h2 { color: #004D52; }
   h3 { color: #004D52; }
-  code { font-size: 0.88rem; }
+  code { font-size: 1rem; }
   blockquote { border-left: 4px solid #004D52; color: #666; }
   .tag {
     display: inline-block;

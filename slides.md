@@ -3,6 +3,7 @@ marp: true
 theme: default
 class: default
 paginate: true
+footer: 'Rust für C/C++ Entwickler'
 style: |
   section {
     font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -12,31 +13,23 @@ style: |
     justify-content: flex-start;
     align-items: flex-start;
     padding-top: 80px;
+    padding-bottom: 60px;
   }
-  section::before {
-    content: '';
+  section[data-marpit-pagination]::after {
+    content: attr(data-marpit-pagination);
     position: fixed;
-    top: 20px;
-    left: 20px;
-    width: 120px;
-    height: 40px;
-    background-image: url('assets/konplan_logo_quer_gruen_2024.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    z-index: 100;
-  }
-  section::after {
-    content: '';
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
-    background-image: url('https://upload.wikimedia.org/wikipedia/commons/d/d5/Rust_programming_language_black_logo.svg');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
+    bottom: 0;
+    right: 0;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #004D52;
+    background: url('assets/hexagon-pagenumber.svg') no-repeat center center;
+    background-size: cover;
+    width: 86px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    padding-top: 8px;
     z-index: 100;
   }
   h1 { color: #004D52; }
@@ -73,18 +66,34 @@ style: |
   table tr:nth-child(even) {
     background: #f5fafa;
   }
-  section.paginate > *:last-child,
-  section[data-marpit-pagination]::after {
-    all: unset;
-  }
-  section[data-marpit-pagination-total]::after {
-    content: attr(data-marpit-pagination) ' / ' attr(data-marpit-pagination-total);
+  footer {
     position: fixed;
-    bottom: 16px;
-    right: 24px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+    background: white;
+    display: flex;
+    align-items: center;
+    padding: 0 60px 0 56px;
     font-size: 0.75rem;
-    color: #999;
+    color: #004D52;
+    z-index: 99;
   }
+  footer::before {
+    content: '';
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    background-image: url('assets/konplan_logo-signet_gruen_2024.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+
   .cols {
     display: grid;
     grid-template-columns: 1fr 1fr;

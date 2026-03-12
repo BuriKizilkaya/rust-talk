@@ -12,7 +12,7 @@ void example_manual_memory() {
     int* ptr = new int(42);
     std::cout << "Wert: " << *ptr << std::endl;
     delete ptr;
-    // use(ptr); // Use-after-free — undefined behavior, kein Compiler-Fehler!
+    use(ptr); // Use-after-free — undefined behavior, kein Compiler-Fehler!
 }
 
 // --- Beispiel 2: Move Semantics (C++11) — opt-in ---
@@ -40,6 +40,10 @@ public:
 private:
     std::string name_;
 };
+
+void use(int* p) {
+    std::cout << "Benutzt: " << *p << std::endl;
+}
 
 void example_raii() {
     Resource r("meine-ressource"); // automatisch zerstört am Scope-Ende

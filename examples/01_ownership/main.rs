@@ -22,7 +22,7 @@ fn main() {
     // --------------------------------------------------
     let name = String::from("Alice");
     begruesse(name); // Ownership geht an Funktion
-                     // println!("{}", name);       // ❌ COMPILE ERROR: name wurde moved
+    // println!("{}", name);       // ❌ COMPILE ERROR: name wurde moved
 
     // --------------------------------------------------
     // 3. Ownership zurückbekommen

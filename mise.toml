@@ -5,7 +5,8 @@ rust = "1.94.0"
 [tasks.slides]
 description = "Generate slides from markdown to html and pdf"
 run = """
-marp --allow-local-files --html --pdf --output _output/slides.pdf slides.md
+cp -r assets _output/
+marp --allow-local-files --pdf --output _output/slides.pdf slides.md
 marp --allow-local-files --output _output/slides.html slides.md
 """
 

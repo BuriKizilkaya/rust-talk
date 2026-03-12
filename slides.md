@@ -96,7 +96,7 @@ style: |
 
 **Sicher. Schnell. Ohne Garbage Collector.**
 
-> „Rust ist C++ — aber der Compiler übernimmt das, woran dein Kollege immer gescheitert ist."
+> „Rust ist C++ — aber der Compiler übernimmt das, woran du schon einmal gescheitert bist."
 
 ---
 

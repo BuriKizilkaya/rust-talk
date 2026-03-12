@@ -4,7 +4,10 @@ rust = "1.94.0"
 
 [tasks.slides]
 description = "Generate slides from markdown to html and pdf"
-run = "marp --html --pdf slides.md"
+run = """
+marp --allow-local-files --html --pdf --output slides.pdf slides.md
+marp --allow-local-files --output slides.html slides.md
+"""
 
 [tasks.rust]
 description = "Run a Rust example: mise run rust <ordner>"

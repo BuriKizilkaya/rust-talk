@@ -40,8 +40,8 @@ fn main() {
     let mut data = String::from("hello");
 
     let leser = &data; // ✅ immutable borrow
-                       // aendern(&mut data);      // ❌ COMPILE ERROR: cannot borrow as mutable
-                       //    because it is also borrowed as immutable
+    // aendern(&mut data);      // ❌ COMPILE ERROR: cannot borrow as mutable
+                                //    because it is also borrowed as immutable
     println!("{}", leser); // leser wird hier nicht mehr genutzt
 
     aendern(&mut data); // ✅ jetzt OK — leser ist nicht mehr aktiv

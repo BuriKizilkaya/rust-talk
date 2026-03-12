@@ -16,6 +16,7 @@ fn main() {
         let s = String::from("hello"); // s wird allokiert
         println!("s = {}", s);
     } // ← s wird hier automatisch gedroppt (kein delete nötig)
+    // println!("value {s} is out of scope"); // ✅ s ist nicht mehr gültig
 
     // --------------------------------------------------
     // 2. Ownership in Funktionen übergeben (Move)

@@ -44,7 +44,7 @@ void iterator_invalidation() {
     auto& first = v[0]; // Referenz auf erstes Element
 
     v.push_back(4); // Reallokation! first ist jetzt DANGLING
-    // std::cout << first; // 💥 Undefined Behavior
+    std::cout << first; // 💥 Undefined Behavior
     // In Rust: ❌ COMPILE ERROR — kann nicht passieren
 }
 
@@ -59,6 +59,13 @@ int main() {
 
     std::cout << "\n=== Aliasing (in Rust verboten) ===" << std::endl;
     aliasing_problem();
+
+    // std::cout << "\n=== Dangling Reference (in Rust verboten) ===" << std::endl;
+    // const std::string& dangling = get_dangling();
+    // std::cout << "Dangling Reference: " << dangling << std::endl; // 💥 Undefined Behavior
+
+    std::cout << "\n=== Iterator Invalidation (in Rust verboten) ===" << std::endl;
+    iterator_invalidation();
 
     return 0;
 }

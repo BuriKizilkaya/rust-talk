@@ -18,7 +18,7 @@ fn main() {
         r = &x;
         println!("r = {}", r); // ✅ hier noch OK
     } // x wird hier gedroppt
-      // println!("{}", r);              // ❌ COMPILE ERROR: x lebt nicht lang genug
+    // println!("{}", r);              // ❌ COMPILE ERROR: x lebt nicht lang genug
 
     // --------------------------------------------------
     // 2. longer() — explizite Lifetime nötig
